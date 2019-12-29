@@ -18,6 +18,8 @@ import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleResponse;
+import com.atlassian.oai.validator.report.LevelResolver;
+import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 
 /**
@@ -59,7 +61,12 @@ public class OpenAPIValidator {
 			//String requestFilePath = cmd.getOptionValue("request");
 
 			final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-					.createForSpecificationUrl(oasFilePath).build();
+					.createForSpecificationUrl(oasFilePath).withLevelResolver( //
+							LevelResolver.create() //
+									.withLevel("validation.schema.required", ValidationReport.Level.INFO) //
+									.withLevel("validation.response.body.missing", ValidationReport.Level.INFO) //
+									.build()) //
+					.build();
 
 			//TODO load request and validate (if argument passed)
 			//String loadJsonRequest = loadResource(requestFilePath);
@@ -70,9 +77,9 @@ public class OpenAPIValidator {
 
 			ValidationReport report = classUnderTest.validateResponse(apiPath, method, response);
 
-			if (!(report.getMessages().isEmpty()
-					|| report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE))) {
-				log.error("Validation failed.  Reason: {}", report.getMessages());
+			if (report.hasErrors()) {
+				log.error(SimpleValidationReportFormat.getInstance().apply(report));
+
 				System.exit(1);
 			} else {
 				log.info("Validation passed");
