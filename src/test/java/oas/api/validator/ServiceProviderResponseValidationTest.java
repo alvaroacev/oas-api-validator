@@ -3,7 +3,7 @@ package oas.api.validator;
 import static com.atlassian.oai.validator.model.Request.Method.GET;
 import static oas.api.validator.util.ValidatortTestUtil.assertPass;
 
-import org.junit.Test;
+import org.junit.Ignore;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -23,7 +23,7 @@ public class ServiceProviderResponseValidationTest {
 			.createForSpecificationUrl(OAS_API_GPI_V3_SDK).build();
     private RestTemplate restTemplate;
 
-	@Test
+	@Ignore // setup a service provider listening on this URI and returning the appropriate response
 	public void validate_payment_status() {
 		String url = "http://localhost:8080/payments/97ed4827-7b6f-4491-a06f-b548d5a7512d/transactions";
 		restTemplate = new RestTemplate();
