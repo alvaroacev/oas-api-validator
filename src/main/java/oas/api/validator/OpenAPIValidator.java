@@ -64,6 +64,7 @@ public class OpenAPIValidator {
 			//TODO load request and validate (if argument passed)
 			//String loadJsonRequest = loadResource(requestFilePath);
 			String loadJsonResponse = loadResource(responseFilePath);
+			log.debug("Response: {}", loadJsonResponse);
 			final Response response = SimpleResponse.Builder.ok().withContentType("application/json")
 					.withBody(loadJsonResponse).build();
 
@@ -71,7 +72,7 @@ public class OpenAPIValidator {
 
 			if (!(report.getMessages().isEmpty()
 					|| report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE))) {
-				System.err.println("Validation failed.  Reason: " + report.getMessages());
+				log.error("Validation failed.  Reason: {}", report.getMessages());
 				System.exit(1);
 			} else {
 				log.info("Validation passed");
@@ -79,7 +80,7 @@ public class OpenAPIValidator {
 
 		} catch (ParseException e) {
 			log.error("Parsing failed.  Reason: {}", e.getMessage());
-			formatter.printHelp("Open API validator", options);
+			formatter.printHelp("Open API validator: {}", options);
 			System.exit(1);
 		} catch (FileNotFoundException e) {
 			log.error("Cannot load resource {}", e.getMessage());

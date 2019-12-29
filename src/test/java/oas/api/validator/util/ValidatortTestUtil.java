@@ -51,7 +51,6 @@ public class ValidatortTestUtil {
 	}
 
 	public static String loadResource(final String path) {
-		log.info("loading resource {}", path);
 		final InputStream stream = ValidatortUtil.class.getResourceAsStream(path);
 		return loadStream(stream);
 

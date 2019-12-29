@@ -16,16 +16,11 @@ public class ValidatortUtil {
     private static final Logger log = LoggerFactory.getLogger(ValidatortUtil.class);
 
     /**
-     * Load a response file with the given name.
+     * Load a stream file.
      *
-     * @param responseNameAndExtension The name of the response to load
+     * @param stream The {@link InputStream} to load
      * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
-     * @throws FileNotFoundException 
      */
-    public static String loadResponse(final String responseNameAndExtension) throws FileNotFoundException {
-        return loadResource("/responses/" + responseNameAndExtension);
-    }
-
 	public static String loadStream(final InputStream stream) {
 		try {
 			final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
@@ -43,7 +38,7 @@ public class ValidatortUtil {
 
 
 	public static String loadResource(final String path) throws FileNotFoundException {
-		log.info("loading resource {}", path);
+		log.info("load resource {}", path);
 		return loadStream(new FileInputStream(path));
     }
 
