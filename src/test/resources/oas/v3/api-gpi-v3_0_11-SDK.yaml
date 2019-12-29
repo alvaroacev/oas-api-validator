@@ -1,0 +1,2226 @@
+openapi: 3.0.0
+info:
+  title: gpi API
+  description: "About this document\n\nThese technical specifications provide information\
+    \ about how to use APIs to access and update the Payment transaction information,\
+    \ it also gives the necessary information to assess the business API. \n\nThis\
+    \ document is for the following audience:\n  * Business analysts to understand\
+    \ the functionality of the API\n  * Business architects to understand the functionality\
+    \ of the API and how to integrate the use of the API within their organisation\n\
+    \  * Software developers of applications using the API to assess the complexity\
+    \ of the API\n"
+  contact:
+    name: Standards & Developer Hub
+    url: https://developer.swift.com
+    email: developer-support@swift.com
+  license:
+    name: API Restricted License
+    url: https://www.swift.com/file/56776/download?token=8w8DC4eF
+  version: 3.0.11-SDK
+servers:
+- url: https://api-test.swiftnet.sipn.swift.com/swift-apitracker-pilot/v3
+  description: Apigee Test in SI
+- url: https://api.swiftnet.sipn.swift.com/swift-apitracker-pilot/v3
+  description: Apigee Production in SI
+security:
+- oauthBearerToken: []
+tags:
+- name: Status Confirmations
+  description: |
+    Payment Transactions - Updating the Status of a Payment Transaction
+    Purpose of the API
+    * This API is a status confirmation update to inform the Tracker about the updated status of a given payment.
+- name: Get Payment Transaction Details
+  description: "Payment Transactions - Getting a Payment Transaction\n\n\nThis API\
+    \ is a payment query to get detailed information regarding a given payment. It\
+    \ requires the UETR to be known.\nExamples of use cases are\n* Debtor status check\
+    \ - ordering BIC or ordering customer wants to see the status \n* Creditor status\
+    \ check - beneficiary BIC or beneficiary customer wants to see the status\n"
+- name: Get Changed Payment Transactions
+  description: |
+    Payment Transactions - Getting the Last Changed Payment
+    Transactions Purpose of the API
+    * This API is a delta query to get all payment update information starting from a given date and time. This API allows synchronization of a local database with the Tracker database. There is a paging mechanism in case the response becomes too large. This is done through returning a "next" token in the response, so that the delta query can continue from the last returned result.
+- name: Get Invalid Events
+  description: |
+    Payment Transactions - Getting Invalid Events
+    Purpose of the API
+    * This API is a payment events' query to get invalid events for payment transactions within a given time frame. An event is either a payment or a status confirmation.
+    * The API is typically used for support or audit purposes, where all invalid messages sent or received are retrievable by one API call.
+- name: Cancel Transaction
+  description: |
+    Payment Transactions - Requesting Cancellation of a
+    Transaction
+    Purpose of the API
+    * This API requests to cancel a transaction.
+- name: Transaction Cancellation Status
+  description: |
+    Payment Transactions - Updating the Status of the Cancellation
+    of a Transaction
+    Purpose of the API
+    * This API responds to cancellation request of a transaction.
+paths:
+  /payments/status:
+    put:
+      tags:
+      - Status Confirmations
+      summary: Status Confirmations.
+      description: This API is a status confirmation update to inform the tracker
+        about the updated status of a given payment
+      operationId: statusConfirmations
+      parameters:
+      - name: X-SWIFT-Signature
+        in: header
+        description: The application level signature produced based on asymmetric
+          cryptography RFC 7515. The input data elements used in signature calculated
+          are abs_path and message body (HTTP request body) according RFC 2616
+        required: true
+        schema:
+          type: string
+          format: byte
+      requestBody:
+        description: Status Confirmation Request
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/camt.a01.001.04'
+            examples:
+              PaymentStatusReq_serial:
+                $ref: '#/components/examples/PaymentStatusReq_serial'
+              PaymentStatusReq1_cover:
+                $ref: '#/components/examples/PaymentStatusReq1_cover'
+              PaymentStatusReq2_cover:
+                $ref: '#/components/examples/PaymentStatusReq2_cover'
+              PaymentStatusReq1_loose:
+                $ref: '#/components/examples/PaymentStatusReq1_loose'
+              PaymentStatusReq2_loose:
+                $ref: '#/components/examples/PaymentStatusReq2_loose'
+        required: true
+      responses:
+        "200":
+          description: Status Confirmation Response - SDK
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/camt.a01.002.03'
+              examples:
+                PaymentStatusResp:
+                  $ref: '#/components/examples/PaymentStatusResp_serial'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                invalid_request:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRequest
+                      text: Invalid request
+                missing_mandatory_field:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.MandatoryFieldMissing
+                      text: Mandatory field %field missing
+                invalid_rbac:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRBACRole
+                      text: RBAC Role
+                request_malformed:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: SwAP501
+                      text: API request is malformed
+        "401":
+          description: Unauthorized
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                from_authorization_failure:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.FromAuthorizationFailure
+                      text: From %From does not have the appropriate RBAC role
+        "413":
+          description: Payload Too Large
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "429":
+          description: Too many requests
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              example:
+                status:
+                  severity: Transient
+                  code: SwAP507
+                  text: Request cannot be processed at this time. Please try later.
+                    (header Retry-After indicates how long to wait before making a
+                    follow-up request).
+        "500":
+          description: Internal Server Error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                service_internal_error:
+                  value:
+                    status:
+                      severity: Transient
+                      code: Sw.gpi.InternalError
+                      text: Internal error
+        "503":
+          description: Service Unavailable
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "504":
+          description: GatewayTimeout
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        default:
+          description: Unexpected error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+  /payments/{uetr}/transactions:
+    get:
+      tags:
+      - Get Payment Transaction Details
+      summary: Get Payment Transaction Details.
+      description: This API is a payment query to get detailed information regarding
+        a given payment. It requires the UETR to be known.
+      operationId: getPaymentTransactionDetails
+      parameters:
+      - name: uetr
+        in: path
+        description: Identifies the payment transaction resource, events linked to
+          this uetr will be retrieved
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/UUIDv4Identifier'
+        example: d2ecb184-b622-11e9-a2a3-2a2ae2dbcce4ey'
+      responses:
+        "200":
+          description: Payment Transaction Response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/camt.a02.002.04'
+              examples:
+                paymentTransactionDetails_serial:
+                  $ref: '#/components/examples/paymentTransactionDetails_serial'
+                paymentTransactionDetails_cover:
+                  $ref: '#/components/examples/paymentTransactionDetails_cover'
+                paymentTransactionDetails_cancel:
+                  $ref: '#/components/examples/paymentTransactionDetails_cancel'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                invalid_request:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRequest
+                      text: Invalid request
+                missing_mandatory_field:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.MandatoryFieldMissing
+                      text: Mandatory field %field missing
+                invalid_rbac:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRBACRole
+                      text: RBAC Role
+                request_malformed:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: SwAP501
+                      text: API request is malformed
+        "401":
+          description: Unauthorized
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                from_authorization_failure:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.FromAuthorizationFailure
+                      text: From %From does not have the appropriate RBAC role
+        "413":
+          description: Payload Too Large
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "429":
+          description: Too many requests
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              example:
+                status:
+                  severity: Transient
+                  code: SwAP507
+                  text: Request cannot be processed at this time. Please try later.
+                    (header Retry-After indicates how long to wait before making a
+                    follow-up request).
+        "500":
+          description: Internal Server Error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                service_internal_error:
+                  value:
+                    status:
+                      severity: Transient
+                      code: Sw.gpi.InternalError
+                      text: Internal error
+        "503":
+          description: Service Unavailable
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "504":
+          description: GatewayTimeout
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        default:
+          description: Unexpected error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+  /payments/changed/transactions:
+    get:
+      tags:
+      - Get Changed Payment Transactions
+      summary: Get Changed Payment Transactions.
+      description: This API is a delta query to get all payment update information
+        starting from a given date and time. This API allows synchronization of a
+        local database with the tracker database. The from_date_time, to_date_time
+        and payment_scenario parameters must be passed with each request. Alternatively,
+        for paginated responses, only the parameter next must be passed.
+      operationId: getChangedPaymentTransactions
+      parameters:
+      - name: from_date_time
+        in: query
+        description: |-
+          Start time window to filter this search, to_date_time can be indicated to limit a window of time.
+          Please note that from_date_time value cannot be older than 124 days from today, if value indicated is older than 124 days, the Tracker will default to the allowed value.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+        example: 2019-01-10T00:00:00.000Z
+      - name: to_date_time
+        in: query
+        description: Stop time window to filter this search, if indicated, from_date_time
+          becomes mandatory. This value indicated should be in the past.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+        example: 2019-04-11T23:59:59.000Z
+      - name: maximum_number
+        in: query
+        description: |-
+          Indicates the maximum number of transactions to be returned.
+
+          The maximum value is 100 and the Tracker defaults to this value if higher or no value is indicated.
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          example: 50
+      - name: payment_scenario
+        in: query
+        description: |-
+          This parameter allows to filter the return value based on a business service
+          * CCTR Customer Credit Transfer
+          * COVE Cover payments
+          * FCTR Financial Institution Credit Transfer
+          * CTCN Customer Credit Transfer Cancellation
+        schema:
+          type: string
+          enum:
+          - CCTR
+          - COVE
+          - FCTR
+          - CTCN
+        example: COVE
+      - name: next
+        in: query
+        description: "Indicates a cursor to get the next set of responses. The value\
+          \ of this\nfield should be empty the first request and server may return\
+          \ a value to\nhelp the consumer navigate through the rest of the pages.\
+          \ \n\nWhen passing a next value on a request, all other query parameters\
+          \ should be\nempty.\n\nIf next value is not returned in the response, there\
+          \ are no pages or\nlast page was reached"
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/Max350Text'
+        example: dXNlIHRoaXMgdmFsdWUgdG8gcmVxdWVzdCBuZXh0IHNldCBvZiBkYXRh
+      responses:
+        "200":
+          description: Last Changed Payment Transactions Request
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/camt.a04.002.04'
+              examples:
+                changedPaymentTransactionsResp:
+                  $ref: '#/components/examples/changedPaymentTransactions'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                invalid_request:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRequest
+                      text: Invalid request
+                missing_mandatory_field:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.MandatoryFieldMissing
+                      text: Mandatory field %field missing
+                invalid_rbac:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRBACRole
+                      text: RBAC Role
+                request_malformed:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: SwAP501
+                      text: API request is malformed
+        "401":
+          description: Unauthorized
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                from_authorization_failure:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.FromAuthorizationFailure
+                      text: From %From does not have the appropriate RBAC role
+        "413":
+          description: Payload Too Large
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "429":
+          description: Too many requests
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              example:
+                status:
+                  severity: Transient
+                  code: SwAP507
+                  text: Request cannot be processed at this time. Please try later.
+                    (header Retry-After indicates how long to wait before making a
+                    follow-up request).
+        "500":
+          description: Internal Server Error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                service_internal_error:
+                  value:
+                    status:
+                      severity: Transient
+                      code: Sw.gpi.InternalError
+                      text: Internal error
+        "503":
+          description: Service Unavailable
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "504":
+          description: GatewayTimeout
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        default:
+          description: Unexpected error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+  /payments/events/invalid:
+    get:
+      tags:
+      - Get Invalid Events
+      summary: Get Invalid Events.
+      description: This API is a payment events query to get invalid events for payment
+        transactions within a given time frame. An event is either a payment or a
+        status confirmation. The from_date_time and to_date_time parameters must be
+        passed with each request. Alternatively, for paginated responses, only the
+        parameter next must be passed.
+      operationId: getInvalidEvents
+      parameters:
+      - name: from_date_time
+        in: query
+        description: |-
+          Start time window to filter this search, to_date_time can be indicated to limit a window of time.
+          Please note that from_date_time value cannot be older than 124 days from today, if value indicated is older than 124 days, the Tracker will default to the allowed value.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+        example: 2019-01-10T00:00:00.000Z
+      - name: to_date_time
+        in: query
+        description: Stop time window to filter this search, if indicated, from_date_time
+          becomes mandatory. This value indicated should be in the past.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+        example: 2019-04-11T23:59:59.000Z
+      - name: maximum_number
+        in: query
+        description: |-
+          Indicates the maximum number of transactions to be returned.
+
+          The maximum value is 100 and the Tracker defaults to this value if higher or no value is indicated.
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          example: 50
+      - name: next
+        in: query
+        description: "Indicates a cursor to get the next set of responses. The value\
+          \ of this\nfield should be empty the first request and server may return\
+          \ a value to\nhelp the consumer navigate through the rest of the pages.\
+          \ \n\nWhen passing a next value on a request, all other query parameters\
+          \ should be\nempty.\n\nIf next value is not returned in the response, there\
+          \ are no pages or\nlast page was reached"
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/Max350Text'
+        example: dXNlIHRoaXMgdmFsdWUgdG8gcmVxdWVzdCBuZXh0IHNldCBvZiBkYXRh
+      responses:
+        "200":
+          description: Payment Events Response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/camt.a05.002.04'
+              examples:
+                InvalidEventsResp1:
+                  $ref: '#/components/examples/InvalidEventsResp1'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                invalid_request:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRequest
+                      text: Invalid request
+                missing_mandatory_field:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.MandatoryFieldMissing
+                      text: Mandatory field %field missing
+                invalid_rbac:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRBACRole
+                      text: RBAC Role
+                request_malformed:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: SwAP501
+                      text: API request is malformed
+        "401":
+          description: Unauthorized
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                from_authorization_failure:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.FromAuthorizationFailure
+                      text: From %From does not have the appropriate RBAC role
+        "413":
+          description: Payload Too Large
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "429":
+          description: Too many requests
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              example:
+                status:
+                  severity: Transient
+                  code: SwAP507
+                  text: Request cannot be processed at this time. Please try later.
+                    (header Retry-After indicates how long to wait before making a
+                    follow-up request).
+        "500":
+          description: Internal Server Error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                service_internal_error:
+                  value:
+                    status:
+                      severity: Transient
+                      code: Sw.gpi.InternalError
+                      text: Internal error
+        "503":
+          description: Service Unavailable
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "504":
+          description: GatewayTimeout
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        default:
+          description: Unexpected error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+  /payments/cancellation:
+    put:
+      tags:
+      - Cancel Transaction
+      summary: Cancel Transaction.
+      description: This API informs the tracker about the cancellation of a given
+        transaction
+      operationId: cancelTransaction
+      parameters:
+      - name: X-SWIFT-Signature
+        in: header
+        description: The application level signature produced based on asymmetric
+          cryptography RFC 7515. The input data elements used in signature calculated
+          are abs_path and message body (HTTP request body) according RFC 2616
+        required: true
+        schema:
+          type: string
+          format: byte
+      requestBody:
+        description: Cancel Transaction Request
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/camt.a06.001.03'
+            examples:
+              CancelTransactionReq_dup_scenario1:
+                $ref: '#/components/examples/CancelTransactionReq_dup_scenario1'
+              CancelTransactionReq_cust_scenario1:
+                $ref: '#/components/examples/CancelTransactionReq_cust_scenario1'
+        required: true
+      responses:
+        "200":
+          description: Cancel Transaction Response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/camt.a06.002.03'
+              examples:
+                CancelTransactionResp:
+                  $ref: '#/components/examples/CancelTransactionResp'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                invalid_request:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRequest
+                      text: Invalid request
+                missing_mandatory_field:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.MandatoryFieldMissing
+                      text: Mandatory field %field missing
+                invalid_rbac:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRBACRole
+                      text: RBAC Role
+                request_malformed:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: SwAP501
+                      text: API request is malformed
+        "401":
+          description: Unauthorized
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                from_authorization_failure:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.FromAuthorizationFailure
+                      text: From %From does not have the appropriate RBAC role
+        "413":
+          description: Payload Too Large
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "429":
+          description: Too many requests
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              example:
+                status:
+                  severity: Transient
+                  code: SwAP507
+                  text: Request cannot be processed at this time. Please try later.
+                    (header Retry-After indicates how long to wait before making a
+                    follow-up request).
+        "500":
+          description: Internal Server Error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                service_internal_error:
+                  value:
+                    status:
+                      severity: Transient
+                      code: Sw.gpi.InternalError
+                      text: Internal error
+        "503":
+          description: Service Unavailable
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "504":
+          description: GatewayTimeout
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        default:
+          description: Unexpected error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+  /payments/cancellation/status:
+    put:
+      tags:
+      - Transaction Cancellation Status
+      summary: Transaction Cancellation Status.
+      description: This call informs the tracker about the updated status of a given
+        payment
+      operationId: transactionCancellationStatus
+      parameters:
+      - name: X-SWIFT-Signature
+        in: header
+        description: The application level signature produced based on asymmetric
+          cryptography RFC 7515. The input data elements used in signature calculated
+          are abs_path and message body (HTTP request body) according RFC 2616
+        required: true
+        schema:
+          type: string
+          format: byte
+      requestBody:
+        description: Transaction Cancellation Status Request
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/camt.a07.001.03'
+            examples:
+              CancelStatusReq1_scenario1:
+                $ref: '#/components/examples/CancelStatusReq1_scenario1'
+              CancelStatusReq2_scenario1:
+                $ref: '#/components/examples/CancelStatusReq2_scenario1'
+              CancelStatusReq1_scenario2:
+                $ref: '#/components/examples/CancelStatusReq1_scenario2'
+              CancelStatusReq2_scenario2:
+                $ref: '#/components/examples/CancelStatusReq2_scenario2'
+        required: true
+      responses:
+        "200":
+          description: Transaction Cancellation Status Response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/camt.a07.002.03'
+              examples:
+                CancelStatusResp:
+                  $ref: '#/components/examples/CancelStatusResp'
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                invalid_request:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRequest
+                      text: Invalid request
+                missing_mandatory_field:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.MandatoryFieldMissing
+                      text: Mandatory field %field missing
+                invalid_rbac:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.InvalidRBACRole
+                      text: RBAC Role
+                request_malformed:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: SwAP501
+                      text: API request is malformed
+        "401":
+          description: Unauthorized
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                from_authorization_failure:
+                  value:
+                    status:
+                      severity: Fatal
+                      code: Sw.gpi.FromAuthorizationFailure
+                      text: From %From does not have the appropriate RBAC role
+        "413":
+          description: Payload Too Large
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "429":
+          description: Too many requests
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              example:
+                status:
+                  severity: Transient
+                  code: SwAP507
+                  text: Request cannot be processed at this time. Please try later.
+                    (header Retry-After indicates how long to wait before making a
+                    follow-up request).
+        "500":
+          description: Internal Server Error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+              examples:
+                service_internal_error:
+                  value:
+                    status:
+                      severity: Transient
+                      code: Sw.gpi.InternalError
+                      text: Internal error
+        "503":
+          description: Service Unavailable
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        "504":
+          description: GatewayTimeout
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+        default:
+          description: Unexpected error
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorCode'
+components:
+  schemas:
+    ErrorCode:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ErrorCode_status'
+    ErrorCode_status:
+      required:
+      - code
+      - severity
+      - text
+      properties:
+        severity:
+          type: string
+          example: Fatal
+          enum:
+          - Fatal
+          - Transient
+          - Logic
+        code:
+          type: string
+          example: Sw.gpi.MandatoryFieldMissing
+          enum:
+          - Sw.gpi.AuthorizationFailure
+          - Sw.gpi.MandatoryFieldMissing
+          - Sw.gpi.InvalidField
+          - Sw.gpi.NoResultFound
+          - Sw.gpi.InternalError
+          - SwAP501
+          - SwAP506
+          - SwAP507
+          - SwAP590
+          - SwAP591
+          - SwAP599
+        text:
+          type: string
+          example: Mandatory field missing
+    camt.a01.001.04:
+      type: object
+      properties:
+        payment_status_request:
+          $ref: '#/components/schemas/PaymentStatusRequest'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema PaymentStatusRequest (camt.a01.001.04) Generated
+        by SWIFT Standards 2019-06-20 02:05:03
+    PaymentStatusRequest:
+      required:
+      - from
+      - instruction_identification
+      - payment_status
+      - uetr
+      - update_payment_scenario
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        business_service:
+          $ref: '#/components/schemas/BusinessService1Code'
+        update_payment_scenario:
+          $ref: '#/components/schemas/PaymentScenario1Code'
+        uetr:
+          $ref: '#/components/schemas/UUIDv4Identifier'
+        instruction_identification:
+          $ref: '#/components/schemas/Max16Text'
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusType3'
+      additionalProperties: false
+      description: This API is a status confirmation update to inform the tracker
+        about the updated status of a given payment.
+    AnyBICDec2014Identifier:
+      pattern: ^[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}$
+      type: string
+      description: 'Code allocated to a financial or non-financial institution by
+        the ISO 9362 Registration Authority, as described in ISO 9362: 2014 - "Banking
+        - Banking telecommunication messages - Business identifier code (BIC)".'
+    BusinessService1Code:
+      type: string
+      description: Specifies the business service agreed between the two MessagingEndpoints
+        under which rules this Business Message is exchanged.
+      enum:
+      - "001"
+      - "005"
+    PaymentScenario1Code:
+      type: string
+      description: Describes the payment scenario used for a payment transaction.
+      enum:
+      - COVE
+      - CCTR
+    UUIDv4Identifier:
+      pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+      type: string
+      description: Universally Unique IDentifier (UUID) version 4, as described in
+        IETC RFC 4122 "Universally Unique IDentifier (UUID) URN Namespace".
+    Max16Text:
+      maxLength: 16
+      minLength: 1
+      type: string
+      description: Specifies a character string with a maximum length of 16 characters.
+    PaymentStatusType3:
+      required:
+      - confirmed_amount
+      - originator
+      - return
+      - transaction_status
+      type: object
+      properties:
+        originator:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        funds_available:
+          $ref: '#/components/schemas/ISODateTime'
+        transaction_status:
+          $ref: '#/components/schemas/PaymentStatus9'
+        return:
+          $ref: '#/components/schemas/TrueFalseIndicator'
+        forwarded_to_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        settlement_method:
+          $ref: '#/components/schemas/SettlementMethod1Code'
+        clearing_system:
+          $ref: '#/components/schemas/ExternalCashClearingSystem1Code'
+        confirmed_amount:
+          $ref: '#/components/schemas/RestrictedFINActiveOrHistoricCurrencyAndAmount'
+        foreign_exchange_details:
+          $ref: '#/components/schemas/CurrencyExchange12'
+        charge_amount:
+          type: array
+          description: Amount of money asked or paid for the charge.
+          items:
+            $ref: '#/components/schemas/RestrictedFINActiveOrHistoricCurrencyAndAmount'
+        charge_bearer:
+          $ref: '#/components/schemas/ChargeBearerType3Code'
+      additionalProperties: false
+      description: Contains the details on the payment status.
+    ISODateTime:
+      pattern: ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.[0-9]+)?(?:Z|[+-][01]\d:[0-5]\d)?$
+      type: string
+      description: |-
+        A particular point in the progression of time defined by a mandatory date and a mandatory time component, expressed in either UTC time format (YYYY-MM-DDThh:mm:ss.sssZ), local time with UTC offset format (YYYY-MM-DDThh:mm:ss.sss+/-hh:mm), or local time format (YYYY-MM-DDThh:mm:ss.sss). These representations are defined in "XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28 October 2004" which is aligned with ISO 8601.
+        Note on the time format:
+        1) beginning / end of calendar day
+        00:00:00 = the beginning of a calendar day
+        24:00:00 = the end of a calendar day
+        2) fractions of second in time format
+        Decimal fractions of seconds may be included. In this case, the involved parties shall agree on the maximum number of digits that are allowed.
+    PaymentStatus9:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TransactionIndividualStatus5Code'
+        reason:
+          $ref: '#/components/schemas/PaymentStatusReason3Code'
+      additionalProperties: false
+      description: 'Indicates the payment transaction status and optionally the reason
+        for that status. '
+    TransactionIndividualStatus5Code:
+      type: string
+      description: Specifies the status of a single payment transaction.
+      enum:
+      - RJCT
+      - ACSP
+      - ACCC
+    PaymentStatusReason3Code:
+      type: string
+      description: Provides the reason for a payment status.
+      enum:
+      - G002
+      - G004
+      - G000
+      - G001
+      - G003
+      - AM06
+      - RC01
+      - AC06
+      - AC04
+      - DUPL
+      - FOCR
+      - BE01
+      - AC01
+      - RC08
+      - FF07
+      - NOAS
+      - RR03
+      - MS03
+      - RR05
+      - CUST
+    TrueFalseIndicator:
+      type: boolean
+      description: A flag indicating a True or False value.
+    SettlementMethod1Code:
+      type: string
+      description: Specifies the method used to settle the credit transfer instruction.
+      enum:
+      - INDA
+      - INGA
+      - COVE
+      - CLRG
+    ExternalCashClearingSystem1Code:
+      maxLength: 3
+      minLength: 1
+      type: string
+      description: "Specifies the cash clearing system, as published in an external\
+        \ cash clearing system code list.\r\nExternal code sets can be downloaded\
+        \ from www.iso20022.org."
+    RestrictedFINActiveOrHistoricCurrencyAndAmount:
+      type: object
+      properties:
+        currency:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        amount:
+          maxLength: 15
+          type: string
+      description: A number of monetary units specified in an active or a historic
+        currency where the unit of currency is explicit and compliant with ISO 4217.
+    ActiveOrHistoricCurrencyCode:
+      pattern: ^[A-Z]{3,3}$
+      type: string
+      description: A code allocated to a currency by a Maintenance Agency under an
+        international identification scheme, as described in the latest edition of
+        the international standard ISO 4217 "Codes for the representation of currencies
+        and funds".
+    CurrencyExchange12:
+      required:
+      - exchange_rate
+      - source_currency
+      - target_currency
+      type: object
+      properties:
+        source_currency:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        target_currency:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        exchange_rate:
+          $ref: '#/components/schemas/BaseOneRate'
+      additionalProperties: false
+      description: Contains the set of elements used to provide details of the currency
+        exchange.
+    BaseOneRate:
+      maxLength: 12
+      type: string
+      description: Rate expressed as a decimal, for example, 0.7 is 7/10 and 70%.
+    ChargeBearerType3Code:
+      type: string
+      description: Specifies which party/parties will bear the charges associated
+        with the processing of the payment transaction.
+      enum:
+      - SHAR
+      - DEBT
+      - CRED
+    camt.a01.002.03:
+      type: object
+      properties:
+        payment_status_response:
+          $ref: '#/components/schemas/PaymentStatusResponse'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema PaymentStatusResponse (camt.a01.002.03) Generated
+        by SWIFT Standards 2019-06-20 02:05:03
+    PaymentStatusResponse:
+      required:
+      - network_reference
+      type: object
+      properties:
+        network_reference:
+          $ref: '#/components/schemas/Max35Text'
+        transaction_status:
+          $ref: '#/components/schemas/PaymentStatus11'
+      additionalProperties: false
+      description: This API is the response to a status confirmation update to inform
+        the tracker about the updated status of a given payment.
+    Max35Text:
+      maxLength: 35
+      minLength: 1
+      type: string
+      description: Specifies a character string with a maximum length of 35 characters.
+    PaymentStatus11:
+      required:
+      - reason
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TransactionIndividualStatus6Code'
+        reason:
+          $ref: '#/components/schemas/PaymentStatusReason5Code'
+      additionalProperties: false
+      description: 'Indicates the payment transaction status and optionally the reason
+        for that status. '
+    TransactionIndividualStatus6Code:
+      type: string
+      description: Specifies the status of a single payment transaction.
+      enum:
+      - ACSP
+    PaymentStatusReason5Code:
+      type: string
+      description: Provides the reason for a payment status.
+      enum:
+      - G000
+      - G001
+    camt.a02.002.04:
+      type: object
+      properties:
+        payment_transaction_details_response:
+          $ref: '#/components/schemas/PaymentTransactionDetailsResponse'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema PaymentTransactionDetailsResponse (camt.a02.002.04)
+        Generated by SWIFT Standards 2019-06-28 03:57:40
+    PaymentTransactionDetailsResponse:
+      required:
+      - initiation_time
+      - last_update_time
+      - transaction_status
+      - uetr
+      type: object
+      properties:
+        uetr:
+          $ref: '#/components/schemas/UUIDv4Identifier'
+        transaction_status:
+          $ref: '#/components/schemas/PaymentStatus13'
+        cancellation_status:
+          $ref: '#/components/schemas/PaymentTransactionCancellationStatus1'
+        cases:
+          $ref: '#/components/schemas/Number'
+        initiation_time:
+          $ref: '#/components/schemas/ISODateTime'
+        completion_time:
+          $ref: '#/components/schemas/ISODateTime'
+        last_update_time:
+          $ref: '#/components/schemas/ISODateTime'
+        payment_event:
+          type: array
+          description: "Groups the information of an event, namely of a payment message\
+            \ or status confirmation update.\r\nUsage:\r\nIt is repeated as many times\
+            \ as there are events to be returned."
+          items:
+            $ref: '#/components/schemas/PaymentEvent8'
+      additionalProperties: false
+      description: "This API is the response to a payment query to get detailed information\
+        \ regarding a given payment transaction.\r\nUsage:\r\n•\tDebtor status check\
+        \ - debtor's agent or debtor wants to see the status\r\n•\tCreditor status\
+        \ check - creditor's agent or creditor wants to see the status\r\n"
+    PaymentStatus13:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TransactionIndividualStatus5Code'
+        reason:
+          $ref: '#/components/schemas/PaymentStatusReason6Code'
+      additionalProperties: false
+      description: 'Indicates the payment transaction status and optionally the reason
+        for that status. '
+    PaymentStatusReason6Code:
+      type: string
+      description: Provides the reason for a payment status.
+      enum:
+      - G002
+      - G004
+      - G000
+      - G001
+      - G003
+      - AM06
+      - RC01
+      - AC06
+      - AC04
+      - DUPL
+      - FOCR
+      - BE01
+      - AC01
+      - RC08
+      - FF07
+      - NOAS
+      - RR03
+      - MS03
+      - RR05
+      - CUST
+      - G006
+    PaymentTransactionCancellationStatus1:
+      required:
+      - transaction_cancellation_status
+      type: object
+      properties:
+        transaction_cancellation_status:
+          $ref: '#/components/schemas/CancellationIndividualStatus2Code'
+      additionalProperties: false
+      description: Provides details on the status of the cancellation of a payment
+        transaction.
+    CancellationIndividualStatus2Code:
+      type: string
+      description: Specifies the status of a cancellation request.
+      enum:
+      - CNCL
+      - PDCR
+      - RJCR
+    Number:
+      maxLength: 19
+      type: string
+      description: Number of objects represented as an integer.
+    PaymentEvent8:
+      required:
+      - from
+      - last_update_time
+      - message_name_identification
+      - network_reference
+      - return
+      - sender_acknowledgement_receipt
+      - to
+      - tracker_event_type
+      - valid
+      type: object
+      properties:
+        network_reference:
+          $ref: '#/components/schemas/Max35Text'
+        message_name_identification:
+          $ref: '#/components/schemas/Max16Text'
+        business_service:
+          $ref: '#/components/schemas/BusinessService3Code'
+        tracker_event_type:
+          $ref: '#/components/schemas/TrackerEventType2Code'
+        valid:
+          $ref: '#/components/schemas/TrueFalseIndicator'
+        invalidity_reason:
+          $ref: '#/components/schemas/ExternalInvalidPaymentsEvent1Code'
+        invalidity_description:
+          $ref: '#/components/schemas/Max350Text'
+        instruction_identification:
+          $ref: '#/components/schemas/Max16Text'
+        related_reference:
+          $ref: '#/components/schemas/Max16Text'
+        case_identification:
+          $ref: '#/components/schemas/Max16Text'
+        original_instruction_identification:
+          $ref: '#/components/schemas/Max16Text'
+        assignment_identification:
+          $ref: '#/components/schemas/Max16Text'
+        transaction_status:
+          $ref: '#/components/schemas/PaymentStatus10'
+        return:
+          $ref: '#/components/schemas/TrueFalseIndicator'
+        underlying_cancellation_details:
+          $ref: '#/components/schemas/UnderlyingCancellationDetails3'
+        funds_available:
+          $ref: '#/components/schemas/ISODateTime'
+        forwarded_to_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        settlement_method:
+          $ref: '#/components/schemas/SettlementMethod1Code'
+        clearing_system:
+          $ref: '#/components/schemas/ExternalCashClearingSystem1Code'
+        from:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        to:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        originator:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        serial_parties:
+          $ref: '#/components/schemas/CustomerCreditTransferTransactionParties2'
+        cover_parties:
+          $ref: '#/components/schemas/CreditTransferTransactionParties2'
+        sender_acknowledgement_receipt:
+          $ref: '#/components/schemas/ISODateTime'
+        received_date:
+          $ref: '#/components/schemas/ISODateTime'
+        instructed_amount:
+          $ref: '#/components/schemas/RestrictedFINActiveOrHistoricCurrencyAndAmount'
+        confirmed_amount:
+          $ref: '#/components/schemas/RestrictedFINActiveOrHistoricCurrencyAndAmount'
+        interbank_settlement_amount:
+          $ref: '#/components/schemas/RestrictedFINActiveCurrencyAndAmount'
+        interbank_settlement_date:
+          $ref: '#/components/schemas/ISODate'
+        charge_bearer:
+          $ref: '#/components/schemas/Max35Text'
+        charge_amount:
+          type: array
+          description: Specifies the amount of money asked or paid for the charge.
+          items:
+            $ref: '#/components/schemas/RestrictedFINActiveOrHistoricCurrencyAndAmount'
+        foreign_exchange_details:
+          $ref: '#/components/schemas/CurrencyExchange12'
+        update_payment:
+          $ref: '#/components/schemas/Max35Text'
+        duplicate_message_reference:
+          $ref: '#/components/schemas/Max35Text'
+        copied_business_service:
+          $ref: '#/components/schemas/Max35Text'
+        last_update_time:
+          $ref: '#/components/schemas/ISODateTime'
+      additionalProperties: false
+      description: Contains information coming from the related payment instruction
+        (specified for example in the related MT 199 or MT 103), or the StatusConfirmationUpdate.
+    BusinessService3Code:
+      type: string
+      description: Specifies the business service agreed between the two MessagingEndpoints
+        under which rules this Business Message is exchanged.
+      enum:
+      - "001"
+      - "002"
+      - "005"
+      - "004"
+    TrackerEventType2Code:
+      type: string
+      description: Indicates the type of payment event.
+      enum:
+      - COPT
+      - CTPT
+      - FTPT
+      - CTCA
+      - CTTS
+      - CTCR
+      - COSU
+      - CTSU
+      - FTSU
+    ExternalInvalidPaymentsEvent1Code:
+      maxLength: 9
+      minLength: 1
+      type: string
+      description: Specifies the reason why a payments event is an invalid component
+        of a payments transaction.
+    Max350Text:
+      maxLength: 350
+      minLength: 1
+      type: string
+      description: Specifies a character string with a maximum length of 350 characters.
+    PaymentStatus10:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TransactionIndividualStatus5Code'
+        reason:
+          $ref: '#/components/schemas/Max35Text'
+      additionalProperties: false
+      description: 'Indicates the payment transaction status and optionally the reason
+        for that status. '
+    UnderlyingCancellationDetails3:
+      type: object
+      properties:
+        cancellation_request_details:
+          $ref: '#/components/schemas/CancellationRequest2'
+        cancellation_response_details:
+          $ref: '#/components/schemas/CancellationResponse1'
+        cancellation_request_tracking_status:
+          $ref: '#/components/schemas/PaymentCancellationStatusReason2Code'
+      additionalProperties: false
+      description: Provides details on the status of the cancellation of the underlying
+        payments event.
+    CancellationRequest2:
+      required:
+      - cancellation_reason_information
+      type: object
+      properties:
+        cancellation_reason_information:
+          $ref: '#/components/schemas/CancellationReason8Code'
+        indemnity_agreement:
+          $ref: '#/components/schemas/PendingPaymentCancellationReason2Code'
+      additionalProperties: false
+      description: Contains detailed information from the cancellation request (for
+        example an MT 192 or an MT 199).
+    CancellationReason8Code:
+      type: string
+      description: Provides the possible reasons why a payment is to be cancelled.
+      enum:
+      - DUPL
+      - AGNT
+      - CURR
+      - CUST
+      - UPAY
+      - CUTA
+      - TECH
+      - FRAD
+      - COVR
+      - AM09
+    PendingPaymentCancellationReason2Code:
+      type: string
+      description: Provides the reason as to why a payment cancellation request is
+        pending.
+      enum:
+      - INDM
+    CancellationResponse1:
+      required:
+      - investigation_execution_status
+      type: object
+      properties:
+        investigation_execution_status:
+          $ref: '#/components/schemas/InvestigationExecutionConfirmation5Code'
+        investigation_execution_status_reason:
+          $ref: '#/components/schemas/InvestigationExecutionStatusReason1'
+      additionalProperties: false
+      description: Contains detailed information from the cancellation response (for
+        example an MT 196 or an MT 199).
+    InvestigationExecutionConfirmation5Code:
+      type: string
+      description: Provides the status on an investigation.
+      enum:
+      - CNCL
+      - PDCR
+      - RJCR
+    InvestigationExecutionStatusReason1:
+      type: object
+      properties:
+        rejected:
+          $ref: '#/components/schemas/PaymentCancellationRejection3Code'
+        pending:
+          $ref: '#/components/schemas/PendingPaymentCancellationReason1Code'
+      additionalProperties: false
+      description: Provides the reason for a status on the execution of an investigation.
+    PaymentCancellationRejection3Code:
+      type: string
+      description: Returned when a request for cancellation cannot be executed.
+      enum:
+      - AGNT
+      - ARDT
+      - INDM
+      - AC04
+      - CUST
+      - AM04
+      - LEGL
+      - NOAS
+      - NOOR
+    PendingPaymentCancellationReason1Code:
+      type: string
+      description: Provides the reason as to why a payment cancellation request is
+        pending.
+      enum:
+      - INDM
+      - PTNA
+      - RQDA
+    PaymentCancellationStatusReason2Code:
+      type: string
+      description: Provides status reasons with regards to the cancellation of the
+        payment.
+      enum:
+      - S004
+      - S003
+      - S002
+      - S000
+      - S001
+    CustomerCreditTransferTransactionParties2:
+      type: object
+      properties:
+        debtor:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        debtor_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        intermediary_agent1:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        instructing_reimbursement_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        creditor_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        creditor:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+      additionalProperties: false
+      description: Identifies all the parties involved in a serial payment transaction.
+    CreditTransferTransactionParties2:
+      type: object
+      properties:
+        debtor:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        debtor_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        intermediary_agent1:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        creditor_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        creditor:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+      additionalProperties: false
+      description: Specifies all the parties involved in a cover payment transaction.
+    RestrictedFINActiveCurrencyAndAmount:
+      type: object
+      properties:
+        currency:
+          $ref: '#/components/schemas/ActiveCurrencyCode'
+        amount:
+          maxLength: 15
+          type: string
+      description: A number of monetary units specified in an active currency where
+        the unit of currency is explicit and compliant with ISO 4217.
+    ActiveCurrencyCode:
+      pattern: ^[A-Z]{3,3}$
+      type: string
+      description: A code allocated to a currency by a Maintenance Agency under an
+        international identification scheme as described in the latest edition of
+        the international standard ISO 4217 "Codes for the representation of currencies
+        and funds".
+    ISODate:
+      pattern: ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+      type: string
+      description: 'A particular point in the progression of time in a calendar year
+        expressed in the YYYY-MM-DD format. This representation is defined in "XML
+        Schema Part 2: Datatypes Second Edition - W3C Recommendation 28 October 2004"
+        which is aligned with ISO 8601.'
+    camt.a04.002.04:
+      type: object
+      properties:
+        changed_payment_transactions_response:
+          $ref: '#/components/schemas/ChangedPaymentTransactionsResponse'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema ChangedPaymentTransactionsResponse (camt.a04.002.04)
+        Generated by SWIFT Standards 2019-06-28 03:57:40
+    ChangedPaymentTransactionsResponse:
+      required:
+      - payment_transaction
+      type: object
+      properties:
+        payment_transaction:
+          type: array
+          description: Contains the payment transactions that meet the search criteria.
+          items:
+            $ref: '#/components/schemas/PaymentTransaction117'
+        next:
+          $ref: '#/components/schemas/Max350Text'
+      additionalProperties: false
+      description: "This API is the response to a delta query to get all payment update\
+        \ information starting from a given date and time. This API allows synchronization\
+        \ of a local database with the tracker database. \r\nUsage: All use cases\
+        \ applicable for the get and search of payment transactions apply also for\
+        \ this API. \r\nThe use of the API to get the last changed payment transactions\
+        \ is driven by an architectural choice to feed a local database and to optimise\
+        \ the flow between the tracker and the API caller.\r\n"
+    PaymentTransaction117:
+      required:
+      - initiation_time
+      - last_update_time
+      - transaction_status
+      - uetr
+      type: object
+      properties:
+        uetr:
+          $ref: '#/components/schemas/UUIDv4Identifier'
+        transaction_status:
+          $ref: '#/components/schemas/PaymentStatus13'
+        cancellation_status:
+          $ref: '#/components/schemas/PaymentTransactionCancellationStatus1'
+        cases:
+          $ref: '#/components/schemas/Number'
+        initiation_time:
+          $ref: '#/components/schemas/ISODateTime'
+        completion_time:
+          $ref: '#/components/schemas/ISODateTime'
+        last_update_time:
+          $ref: '#/components/schemas/ISODateTime'
+        payment_event:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentEvent8'
+      additionalProperties: false
+      description: Contains the details on the payment transaction.
+    camt.a05.002.04:
+      type: object
+      properties:
+        invalid_events_response:
+          $ref: '#/components/schemas/InvalidEventsResponse'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema InvalidEventsResponse (camt.a05.002.04) Generated
+        by SWIFT Standards 2019-06-20 02:05:03
+    InvalidEventsResponse:
+      required:
+      - event
+      type: object
+      properties:
+        event:
+          type: array
+          description: Each instance contains one payment event that matches the search
+            criteria.
+          items:
+            $ref: '#/components/schemas/PaymentEvent9'
+        next:
+          $ref: '#/components/schemas/Max350Text'
+      additionalProperties: false
+      description: "This API is a payment events response to a query to get invalid\
+        \ events for payment transactions within a given time frame. An event is either\
+        \ a payment or a status confirmation.\r\nUsage: The API is typically used\
+        \ for support or audit purposes, where all invalid messages sent or received\
+        \ are retrievable by one API call.\r\n"
+    PaymentEvent9:
+      required:
+      - from
+      - instruction_identification
+      - invalidity_reason
+      - message_name_identification
+      - network_reference
+      - participant
+      - to
+      - tracker_event_type
+      - uetr
+      type: object
+      properties:
+        uetr:
+          $ref: '#/components/schemas/UUIDv4Identifier'
+        business_service:
+          $ref: '#/components/schemas/BusinessService4Code'
+        participant:
+          $ref: '#/components/schemas/TrueFalseIndicator'
+        network_reference:
+          $ref: '#/components/schemas/Max35Text'
+        message_name_identification:
+          $ref: '#/components/schemas/Max16Text'
+        instruction_identification:
+          $ref: '#/components/schemas/Max16Text'
+        tracker_event_type:
+          $ref: '#/components/schemas/TrackerEventType2Code'
+        from:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        to:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        invalidity_reason:
+          $ref: '#/components/schemas/ExternalInvalidEventReason1Code'
+      additionalProperties: false
+      description: Contains the details of an invalid payment event.
+    BusinessService4Code:
+      type: string
+      description: Specifies the business service agreed between the two MessagingEndpoints
+        under which rules this Business Message is exchanged.
+      enum:
+      - "001"
+      - "002"
+      - "005"
+      - "004"
+      - "006"
+    ExternalInvalidEventReason1Code:
+      maxLength: 4
+      minLength: 1
+      type: string
+      description: 'Codeset containing the reasons why an event (a message)was invalid
+        in the context of the transaction. '
+    camt.a06.001.03:
+      type: object
+      properties:
+        cancel_transaction_request:
+          $ref: '#/components/schemas/CancelTransactionRequest'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema CancelTransactionRequest (camt.a06.001.03)
+        Generated by SWIFT Standards 2019-06-20 02:05:03
+    CancelTransactionRequest:
+      required:
+      - business_service
+      - case_identification
+      - from
+      - uetr
+      - underlying_cancellation_details
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        business_service:
+          $ref: '#/components/schemas/BusinessService2Code'
+        case_identification:
+          $ref: '#/components/schemas/Max16Text'
+        uetr:
+          $ref: '#/components/schemas/UUIDv4Identifier'
+        original_instruction_identification:
+          $ref: '#/components/schemas/Max16Text'
+        underlying_cancellation_details:
+          $ref: '#/components/schemas/CancellationRequest2'
+      additionalProperties: false
+      description: This API informs the tracker about the cancellation of a given
+        transaction
+    BusinessService2Code:
+      type: string
+      description: Specifies the business service agreed between the two MessagingEndpoints
+        under which rules this Business Message is exchanged.
+      enum:
+      - "002"
+    camt.a06.002.03:
+      type: object
+      properties:
+        cancel_transaction_response:
+          $ref: '#/components/schemas/CancelTransactionResponse'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema CancelTransactionResponse (camt.a06.002.03)
+        Generated by SWIFT Standards 2019-06-20 02:05:03
+    CancelTransactionResponse:
+      required:
+      - network_reference
+      type: object
+      properties:
+        network_reference:
+          $ref: '#/components/schemas/Max35Text'
+      additionalProperties: false
+      description: This API is the response to the CancelTransactionRequest.
+    camt.a07.001.03:
+      type: object
+      properties:
+        transaction_cancellation_status_request:
+          $ref: '#/components/schemas/TransactionCancellationStatusRequest'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema TransactionCancellationStatusRequest (camt.a07.001.03)
+        Generated by SWIFT Standards 2019-06-20 02:05:03
+    TransactionCancellationStatusRequest:
+      required:
+      - assignment_identification
+      - business_service
+      - case_identification
+      - from
+      - originator
+      - uetr
+      - underlying_cancellation_details
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        business_service:
+          $ref: '#/components/schemas/BusinessService2Code'
+        uetr:
+          $ref: '#/components/schemas/UUIDv4Identifier'
+        assignment_identification:
+          $ref: '#/components/schemas/Max16Text'
+        case_identification:
+          $ref: '#/components/schemas/Max16Text'
+        underlying_cancellation_details:
+          $ref: '#/components/schemas/CancellationResponse1'
+        originator:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+        forwarded_to_agent:
+          $ref: '#/components/schemas/AnyBICDec2014Identifier'
+      additionalProperties: false
+      description: This call informs the tracker about the updated status of a given
+        payment.
+    camt.a07.002.03:
+      type: object
+      properties:
+        transaction_cancellation_status_response:
+          $ref: '#/components/schemas/TransactionCancellationStatusResponse'
+      additionalProperties: false
+      description: ISO 20022 JSON Schema TransactionCancellationStatusResponse (camt.a07.002.03)
+        Generated by SWIFT Standards 2019-06-20 02:05:03
+    TransactionCancellationStatusResponse:
+      required:
+      - network_reference
+      type: object
+      properties:
+        network_reference:
+          $ref: '#/components/schemas/Max35Text'
+      additionalProperties: false
+      description: This API is the response to a status confirmation update to inform
+        the tracker about the updated status of a given payment.
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+          examples:
+            invalid_request:
+              value:
+                status:
+                  severity: Fatal
+                  code: Sw.gpi.InvalidRequest
+                  text: Invalid request
+            missing_mandatory_field:
+              value:
+                status:
+                  severity: Fatal
+                  code: Sw.gpi.MandatoryFieldMissing
+                  text: Mandatory field %field missing
+            invalid_rbac:
+              value:
+                status:
+                  severity: Fatal
+                  code: Sw.gpi.InvalidRBACRole
+                  text: RBAC Role
+            request_malformed:
+              value:
+                status:
+                  severity: Fatal
+                  code: SwAP501
+                  text: API request is malformed
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+          examples:
+            from_authorization_failure:
+              value:
+                status:
+                  severity: Fatal
+                  code: Sw.gpi.FromAuthorizationFailure
+                  text: From %From does not have the appropriate RBAC role
+    NotFound:
+      description: Not Found
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+          examples:
+            no_result_found:
+              value:
+                status:
+                  severity: Transient
+                  code: Sw.gpi.NoResultFound
+                  text: No result found
+            resource_not_exist:
+              value:
+                status:
+                  severity: Fatal
+                  code: SwAP506
+                  text: Resource does not exist.
+    PayloadTooLarge:
+      description: Payload Too Large
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+          example:
+            status:
+              severity: Transient
+              code: SwAP507
+              text: Request cannot be processed at this time. Please try later. (header
+                Retry-After indicates how long to wait before making a follow-up request).
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+          examples:
+            service_internal_error:
+              value:
+                status:
+                  severity: Transient
+                  code: Sw.gpi.InternalError
+                  text: Internal error
+    BadGateway:
+      description: Bad Gateway
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+    GatewayTimeout:
+      description: GatewayTimeout
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ErrorCode'
+  examples:
+    PaymentStatusReq_serial:
+      summary: Request to update the status of a serial transaction to ACSP/G000 (linked
+        to PaymentTransactions serial transaction)
+      value:
+        payment_status_request:
+          from: BANBUS33XXX
+          business_service: "001"
+          update_payment_scenario: CCTR
+          uetr: 97ed4827-7b6f-4491-a06f-b548d5a7512d
+          instruction_identification: statusabc123
+          payment_status:
+            originator: BANBUS33XXX
+            transaction_status:
+              status: ACSP
+              reason: G000
+            return: false
+            forwarded_to_agent: BANCUS33XXX
+            settlement_method: INDA
+            confirmed_amount:
+              currency: USD
+              amount: "970"
+            charge_amount:
+            - currency: USD
+              amount: "10"
+            - currency: USD
+              amount: "20"
+            charge_bearer: CRED
+    PaymentStatusReq1_cover:
+      summary: Request to update the status of a cover transaction to ACCC
+      value:
+        payment_status_request:
+          from: BANCUS33XXX
+          business_service: "001"
+          update_payment_scenario: COVE
+          uetr: 46ed4827-7b6f-4491-a06f-b548d5a7512d
+          instruction_identification: jkl000
+          payment_status:
+            originator: BANCUS33XXX
+            funds_available: 2019-08-30T16:00:00.0Z
+            transaction_status:
+              status: ACCC
+            return: false
+            confirmed_amount:
+              currency: USD
+              amount: "1000"
+    PaymentStatusReq2_cover:
+      summary: Request to update the status of a serial transaction to ACCC which
+        is part of a cover scenario (linked to ChangedPaymentTransactions)
+      value:
+        payment_status_request:
+          from: BANDJPJTXXX
+          business_service: "001"
+          update_payment_scenario: CCTR
+          uetr: 46ed4827-7b6f-4491-a06f-b548d5a7512d
+          instruction_identification: mno000
+          payment_status:
+            originator: BANDJPJTXXX
+            funds_available: 2019-08-30T17:00:00.0Z
+            transaction_status:
+              status: ACCC
+            return: false
+            confirmed_amount:
+              currency: USD
+              amount: "1000"
+    PaymentStatusReq1_loose:
+      summary: 'Request to update the status of a serial transaction to ACCC. Note:
+        This is a loose sample'
+      value:
+        payment_status_request:
+          from: BANCBEBB
+          business_service: "001"
+          update_payment_scenario: CCTR
+          uetr: 44ed4999-7b6f-4491-a06f-b655d5a7512d
+          instruction_identification: def123
+          payment_status:
+            originator: BANCBEBB
+            funds_available: 2019-08-30T17:02:00.0Z
+            transaction_status:
+              status: ACCC
+            return: false
+            confirmed_amount:
+              currency: EUR
+              amount: "1000"
+            charge_bearer: DEBT
+    PaymentStatusReq2_loose:
+      summary: Request to update the status of a serial transaction to RJCT. This
+        is a loose sample.
+      value:
+        payment_status_request:
+          from: BANCGB2LXXX
+          business_service: "001"
+          update_payment_scenario: CCTR
+          uetr: 54ed4827-7b6f-4491-a06f-b548d5a7512d
+          instruction_identification: trn123
+          payment_status:
+            originator: BANCGB2LXXX
+            transaction_status:
+              status: RJCT
+              reason: AM06
+            return: false
+            confirmed_amount:
+              currency: GBP
+              amount: "1000"
+    CancelTransactionReq_dup_scenario1:
+      summary: Request to cancel a transaction with reason DUPL.
+      value:
+        cancel_transaction_request:
+          from: BANABEBBXXX
+          business_service: "002"
+          case_identification: "123"
+          uetr: 97ed4827-7b6f-4491-a06f-b548d5a7512d
+          original_instruction_identification: abc123
+          underlying_cancellation_details:
+            cancellation_reason_information: DUPL
+    CancelTransactionReq_cust_scenario1:
+      summary: Request to cancel a transaction with reason CUST.
+      value:
+        cancel_transaction_request:
+          from: BANABEBBXXX
+          business_service: "002"
+          case_identification: CaseXYZ
+          uetr: 46ed4827-7b6f-4491-a06f-b657d5a6411d
+          original_instruction_identification: Instruction1
+          underlying_cancellation_details:
+            cancellation_reason_information: CUST
+    CancelStatusReq1_scenario1:
+      summary: Request to update status of cancellation request to ‘pending’ & ‘forwarded
+        to next agent’.
+      value:
+        transaction_cancellation_status_request:
+          from: BANBUS33XXX
+          business_service: "002"
+          uetr: 97ed4827-7b6f-4491-a06f-b548d5a7512d
+          assignment_identification: resolvedcase123
+          case_identification: "123"
+          underlying_cancellation_details:
+            investigation_execution_status: PDCR
+            investigation_execution_status_reason:
+              pending: PTNA
+          originator: BANBUS33XXX
+          forwarded_to_agent: BANCUS33XXX
+    CancelStatusReq2_scenario1:
+      summary: Request to update status of cancellation request to ‘cancelled’.
+      value:
+        transaction_cancellation_status_request:
+          from: BANBUS33XXX
+          business_service: "002"
+          uetr: 97ed4827-7b6f-4491-a06f-b548d5a7512d
+          assignment_identification: resolvedcase123
+          case_identification: "123"
+          underlying_cancellation_details:
+            investigation_execution_status: CNCL
+          originator: BANBUS33XXX
+    CancelStatusReq1_scenario2:
+      summary: Request to update status of cancellation request to ‘pending’ & ‘debit
+        authorisation requested from creditor’.’
+      value:
+        transaction_cancellation_status_request:
+          from: BANCDEFFXXX
+          business_service: "002"
+          uetr: 46ed4827-7b6f-4491-a06f-b657d5a6411d
+          assignment_identification: InvRef1
+          case_identification: CaseXYZ
+          underlying_cancellation_details:
+            investigation_execution_status: PDCR
+            investigation_execution_status_reason:
+              pending: RQDA
+          originator: BANCDEFFXXX
+    CancelStatusReq2_scenario2:
+      summary: Request to update status of cancellation request to ‘rejected’ because
+        there is no answer from creditor.
+      value:
+        transaction_cancellation_status_request:
+          from: BANCDEFFXXX
+          business_service: "002"
+          uetr: 46ed4827-7b6f-4491-a06f-b657d5a6411d
+          assignment_identification: InvRef1
+          case_identification: CaseXYZ
+          underlying_cancellation_details:
+            investigation_execution_status: RJCR
+            investigation_execution_status_reason:
+              rejected: NOAS
+          originator: BANCDEFFXXX
+  securitySchemes:
+    oauthBearerToken:
+      type: http
+      description: The access token obtained as a result of OAuth 2.0 JWT Bearer Token
+        Flow - RFC 7523. Find out how to obtain the token by following the links below.
+        OAuth Introduction - https://developer.swift.com/oauth-overview OAuth Token
+        API specifications - https://developer.swift.com/oauth-reference
+      scheme: bearer
+      bearerFormat: opaque OAuth 2.0
+x-tagGroups:
+- name: gCCT/gCOV
+  tags:
+  - Status Confirmations
+  - Get Payment Transaction Details
+  - Get Changed Payment Transactions
+- name: gSRP
+  tags:
+  - Cancel Transaction
+  - Transaction Cancellation Status
+- name: Admin
+  tags:
+  - Get Invalid Events

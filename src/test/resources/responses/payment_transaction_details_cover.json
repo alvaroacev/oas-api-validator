@@ -1,0 +1,154 @@
+{
+  "payment_transaction_details_response": {
+    "uetr": "46ed4827-7b6f-4491-a06f-b548d5a7512d",
+    "transaction_status": {
+      "status": "ACCC"
+    },
+    "initiation_time": "2019-08-30T09:00:00.0Z",
+    "completion_time": "2018-01-01T17:00:00.0Z",
+    "last_update_time": "2018-01-01T17:00:00.0Z",
+    "payment_event": [
+      {
+        "network_reference": "abc",
+        "message_name_identification": "103",
+        "business_service": "001",
+        "tracker_event_type": "CTPT",
+        "valid": true,
+        "instruction_identification": "abc123",
+        "transaction_status": {
+          "status": "ACSP",
+          "reason": "G000"
+        },
+        "return": false,
+        "settlement_method": "COVE",
+        "from": "BANABEBBXXX",
+        "to": "BANDJPJTXXX",
+        "serial_parties": {
+          "debtor_agent": "BANABEBBXXX",
+          "instructing_reimbursement_agent": "BANBUS33XXX",
+          "creditor_agent": "BANDJPJTXXX"
+        },
+        "sender_acknowledgement_receipt": "2019-08-30T09:00:00.0Z",
+        "received_date": "2019-08-30T09:00:00.0Z",
+        "instructed_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "interbank_settlement_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "interbank_settlement_date": "2019-08-30",
+        "charge_bearer": "DEBT",
+        "last_update_time": "2019-08-30T09:00:00.0Z"
+      },
+      {
+        "network_reference": "def",
+        "message_name_identification": "202COV",
+        "business_service": "001",
+        "tracker_event_type": "COPT",
+        "valid": true,
+        "instruction_identification": "def456",
+        "related_reference": "abc123",
+        "transaction_status": {
+          "status": "ACSP",
+          "reason": "G000"
+        },
+        "return": false,
+        "settlement_method": "INDA",
+        "from": "BANABEBBXXX",
+        "to": "BANBUS33XXX",
+        "cover_parties": {
+          "debtor": "BANABEBBXXX",
+          "debtor_agent": "BANBUS33XXX",
+          "creditor_agent": "BANCUS33XXX",
+          "creditor": "BANDJPJTXXX"
+        },
+        "sender_acknowledgement_receipt": "2019-08-30T09:05:00.0Z",
+        "received_date": "2019-08-30T09:05:00.0Z",
+        "interbank_settlement_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "interbank_settlement_date": "2019-08-30",
+        "last_update_time": "2019-08-30T09:05:00.0Z"
+      },
+      {
+        "network_reference": "ghi",
+        "message_name_identification": "202COV",
+        "business_service": "001",
+        "tracker_event_type": "COPT",
+        "valid": true,
+        "instruction_identification": "ghi789",
+        "related_reference": "abc123",
+        "transaction_status": {
+          "status": "ACSP",
+          "reason": "G000"
+        },
+        "return": false,
+        "settlement_method": "CLRG",
+        "clearing_system": "FDW",
+        "from": "BANBUS33XXX",
+        "to": "BANCUS33XXX",
+        "cover_parties": {
+          "debtor": "BANABEBBXXX",
+          "debtor_agent": "BANBUS33XXX",
+          "creditor_agent": "BANCUS33XXX",
+          "creditor": "BANDJPJTXXX"
+        },
+        "sender_acknowledgement_receipt": "2019-08-30T09:10:00.0Z",
+        "received_date": "2019-08-30T09:10:00.0Z",
+        "interbank_settlement_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "interbank_settlement_date": "2019-08-30",
+        "last_update_time": "2019-08-30T09:10:00.0Z"
+      },
+      {
+        "network_reference": "jkl",
+        "message_name_identification": "299",
+        "business_service": "001",
+        "tracker_event_type": "COSU",
+        "valid": true,
+        "instruction_identification": "jkl000",
+        "transaction_status": {
+          "status": "ACCC"
+        },
+        "return": false,
+        "funds_available": "2019-08-30T16:00:00.0Z",
+        "from": "BANCUS33XXX",
+        "to": "TRCKCHZZXXX",
+        "originator": "BANCUS33XXX",
+        "sender_acknowledgement_receipt": "2019-08-30T16:00:00.0Z",
+        "confirmed_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "last_update_time": "2019-08-30T16:00:00.0Z"
+      },
+      {
+        "network_reference": "mno",
+        "message_name_identification": "199",
+        "business_service": "001",
+        "tracker_event_type": "CTSU",
+        "valid": true,
+        "instruction_identification": "mno000",
+        "transaction_status": {
+          "status": "ACCC"
+        },
+        "return": false,
+        "funds_available": "2019-08-30T17:00:00.0Z",
+        "from": "BANDJPJTXXX",
+        "to": "TRCKCHZZXXX",
+        "originator": "BANDJPJTXXX",
+        "sender_acknowledgement_receipt": "2019-08-30T17:00:00.0Z",
+        "confirmed_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "last_update_time": "2019-08-30T17:00:00.0Z"
+      }
+    ]
+  }
+}

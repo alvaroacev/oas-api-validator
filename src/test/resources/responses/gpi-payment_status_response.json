@@ -1,0 +1,9 @@
+{
+  "payment_status_response": {
+    "network_reference": "20190522000128293-010000068667",
+    "transaction_status": {
+      "status": "ACSP",
+      "reason": "G000"
+    }
+  }
+}

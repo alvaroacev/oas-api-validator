@@ -1,0 +1,175 @@
+{
+  "payment_transaction_details_response": {
+    "uetr": "97ed4827-7b6f-4491-a06f-b548d5a7512d",
+    "transaction_status": {
+      "status": "ACCC"
+    },
+    "initiation_time": "2019-08-30T09:00:00.0Z",
+    "completion_time": "2019-08-30T17:00:00.0Z",
+    "last_update_time": "2019-08-30T17:00:00.0Z",
+    "payment_event": [
+      {
+        "network_reference": "abc",
+        "message_name_identification": "103",
+        "business_service": "001",
+        "tracker_event_type": "CTPT",
+        "valid": true,
+        "instruction_identification": "abc123",
+        "transaction_status": {
+          "status": "ACSP",
+          "reason": "G000"
+        },
+        "return": false,
+        "settlement_method": "INDA",
+        "from": "BANABEBBXXX",
+        "to": "BANBUS33XXX",
+        "serial_parties": {
+          "debtor_agent": "BANABEBBXXX",
+          "creditor_agent": "BANDJPJTXXX"
+        },
+        "sender_acknowledgement_receipt": "2019-08-30T09:30:00.0Z",
+        "received_date": "2019-08-30T09:30:00.0Z",
+        "instructed_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "interbank_settlement_amount": {
+          "currency": "USD",
+          "amount": "990"
+        },
+        "interbank_settlement_date": "2019-08-30",
+        "charge_bearer": "CRED",
+        "charge_amount": [
+          {
+            "currency": "USD",
+            "amount": "10"
+          }
+        ],
+        "last_update_time": "2019-08-30T09:30:00.0Z"
+      },
+      {
+        "network_reference": "def",
+        "message_name_identification": "199",
+        "business_service": "001",
+        "tracker_event_type": "CTSU",
+        "valid": true,
+        "instruction_identification": "statusabc123",
+        "transaction_status": {
+          "status": "ACSP",
+          "reason": "G000"
+        },
+        "return": false,
+        "forwarded_to_agent": "BANCUS33XXX",
+        "settlement_method": "INDA",
+        "from": "BANBUS33XXX",
+        "to": "TRCKCHZZXXX",
+        "originator": "BANBUS33XXX",
+        "sender_acknowledgement_receipt": "2019-08-30T10:00:00.0Z",
+        "confirmed_amount": {
+          "currency": "USD",
+          "amount": "970"
+        },
+        "charge_bearer": "CRED",
+        "charge_amount": [
+          {
+            "currency": "USD",
+            "amount": "10"
+          },
+          {
+            "currency": "USD",
+            "amount": "20"
+          }
+        ],
+        "last_update_time": "2019-08-30T10:00:00.0Z"
+      },
+      {
+        "network_reference": "ghi",
+        "message_name_identification": "103",
+        "business_service": "001",
+        "tracker_event_type": "CTPT",
+        "valid": true,
+        "instruction_identification": "def456",
+        "transaction_status": {
+          "status": "ACSP",
+          "reason": "G000"
+        },
+        "return": false,
+        "settlement_method": "INDA",
+        "from": "BANCUS33XXX",
+        "to": "BANDJPJTXXX",
+        "serial_parties": {
+          "debtor_agent": "BANABEBBXXX",
+          "creditor_agent": "BANDJPJTXXX"
+        },
+        "sender_acknowledgement_receipt": "2019-08-30T10:30:00.0Z",
+        "received_date": "2019-08-30T10:30:00.0Z",
+        "instructed_amount": {
+          "currency": "USD",
+          "amount": "1000"
+        },
+        "interbank_settlement_amount": {
+          "currency": "USD",
+          "amount": "940"
+        },
+        "interbank_settlement_date": "2019-08-30",
+        "charge_bearer": "CRED",
+        "charge_amount": [
+          {
+            "currency": "USD",
+            "amount": "10"
+          },
+          {
+            "currency": "USD",
+            "amount": "20"
+          },
+          {
+            "currency": "USD",
+            "amount": "30"
+          }
+        ],
+        "last_update_time": "2019-08-30T10:30:00.0Z"
+      },
+      {
+        "network_reference": "jkl",
+        "message_name_identification": "199",
+        "business_service": "001",
+        "tracker_event_type": "CTSU",
+        "valid": true,
+        "instruction_identification": "statusdef456",
+        "transaction_status": {
+          "status": "ACCC"
+        },
+        "return": false,
+        "funds_available": "2019-08-30T17:00:00.0Z",
+        "from": "BANDJPJTXXX",
+        "to": "TRCKCHZZXXX",
+        "originator": "BANDJPJTXXX",
+        "sender_acknowledgement_receipt": "2019-08-30T17:00:00.0Z",
+        "confirmed_amount": {
+          "currency": "USD",
+          "amount": "900"
+        },
+        "charge_bearer": "CRED",
+        "charge_amount": [
+          {
+            "currency": "USD",
+            "amount": "10"
+          },
+          {
+            "currency": "USD",
+            "amount": "20"
+          },
+          {
+            "currency": "USD",
+            "amount": "30"
+          },
+          {
+            "currency": "USD",
+            "amount": "40"
+          }
+        ],
+        "last_update_time": "2019-08-30T17:00:00.0Z"
+      }
+    ]
+  }
+}
