@@ -85,12 +85,16 @@ public class OpenAPIValidator {
 				log.info("Validation passed");
 			}
 
+		} catch (FileNotFoundException e) {
+			log.error("Cannot load resource {}", e.getMessage());
+			System.exit(1);
 		} catch (ParseException e) {
 			log.error("Parsing failed.  Reason: {}", e.getMessage());
 			formatter.printHelp("Open API validator: {}", options);
 			System.exit(1);
-		} catch (FileNotFoundException e) {
-			log.error("Cannot load resource {}", e.getMessage());
+		} catch (RuntimeException e) {
+			log.error("Parsing failed.  Reason: {}", e.getMessage());
+			System.exit(1);
 		}
 	}
 }
