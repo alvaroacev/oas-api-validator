@@ -16,7 +16,7 @@
 	<properties>
 		<source.encoding>UTF-8</source.encoding>
 		<hamcrest.version>2.1</hamcrest.version>
-		<junit.version>4.12</junit.version>
+		<junit.version>4.13.1</junit.version>
 		<atlassian.version>2.8.3</atlassian.version>
 		<spring.version>4.3.25.RELEASE</spring.version>
 		<slf4j.version>1.7.28</slf4j.version>
